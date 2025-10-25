@@ -1,17 +1,7 @@
-FROM node:16-alpine
-
-# set working directory
+FROM node:14
 WORKDIR /app
-
-# add `/app/node_modules/.bin` to $PATH
-ENV PATH /app/node_modules/.bin:$PATH
-
-# install and cache app dependencies
 COPY package*.json ./
-
 RUN npm install
-
 COPY . .
-
-# start app
-CMD ["npm", "run", "serve"]
+EXPOSE 8080
+CMD ["npm", "run", "serve", "--", "--host", "0.0.0.0", "--port", "8080"]

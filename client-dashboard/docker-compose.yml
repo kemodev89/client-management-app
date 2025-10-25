@@ -1,20 +1,19 @@
-version: '3.7'
+# Compose V2 (omit top-level 'version' to avoid warnings)
 
 volumes:
   datafiles:
 
 services:
-
   client-dashboard:
     container_name: client-dashboard
     build:
-      context: ./client-dashboard
+      context: ./client-dashboard        # inner Vue folder (has package.json + Dockerfile)
       dockerfile: Dockerfile
     volumes:
-      - './client-dashboard:/app'
-      - '/app/node_modules'
+      - ./client-dashboard:/app          # live mount inner app folder
+      - /app/node_modules
     ports:
-      - '8080:8080'
+      - "8080:8080"
     environment:
       - CHOKIDAR_USEPOLLING=true
 
@@ -24,23 +23,24 @@ services:
       - "3306:3306"
     volumes:
       - datafiles:/var/lib/mysql
-      - "./ClientDashboardAPI/sql-scripts/setup.sql:/docker-entrypoint-initdb.d/1.sql"
+      - ./ClientDashboardAPI/sql-scripts/setup.sql:/docker-entrypoint-initdb.d/1.sql
     restart: always
-    environment: 
+    environment:
       MYSQL_ROOT_PASSWORD: Root0++
       MYSQL_USER: newuser
       MYSQL_PASSWORD: password
       MYSQL_DATABASE: ClientDashboardDB
-  
+
   api:
     build:
-      context: ./ClientDashboardAPI
+      context: ./ClientDashboardAPI       # API folder is a sibling of inner Vue folder
       dockerfile: Dockerfile
-    depends_on: 
+    depends_on:
       - database
     ports:
       - "5000:80"
     restart: always
-    environment: 
+    environment:
       - DBHOST=database
       - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=database;Port=3306;Database=ClientDashboardDB;User=newuser;Password=password;SslMode=None;TreatTinyAsBoolean=true;AllowPublicKeyRetrieval=True
